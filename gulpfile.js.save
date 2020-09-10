@@ -1,0 +1,132 @@
+var gulp = require('gulp');
+var concat = require('gulp-concat');
+let babel = require('gulp-babel'),
+    uglify = require('gulp-uglify');
+var myth = require('gulp-myth');
+var del = require('del');
+var imagemin = require('gulp-imagemin'); // Added
+var newer = require('gulp-newer');
+var rename = require('gulp-rename');
+const { series } = require('gulp');
+const { watch } = require('gulp');
+const watcher = watch(['app/img/*.jpg'], {dalay: 500});
+
+var
+    sourseimg = 'app/img/',
+    dest = 'appdest/',
+    srccss = 'app/css/',
+    images = { in: sourseimg + '*.*',
+        out: dest + 'images/'
+    };
+
+
+var devBuild = ((process.env.NODE_ENV || 'development').trim().toLowerCase() !== 'production'),
+    pkg = require('./package.json'),
+    source = '/',
+    destfolder = 'dest_folder/';
+
+var html = {
+    in: source + '*.html',
+    watch:[source + '*.html', destfolder + '/templa/**/*'],
+    out: dest,
+    context: {
+        devBuild: devBuild,
+        autor: pkg.autor,
+        version: pkg.version  
+    }
+}
+//console.log(pkg.name + ' ' + pkg.version + ' ' + (devBuild ? 'development' : 'production') + ' build');
+//console.log(process.env.NODE_ENV);
+
+
+function defaultTask() {
+    console.log('cтарт с этого места');
+};
+
+
+gulp.task('html', )
+
+
+
+
+gulp.task('clean', function() {
+    console.log('deteted ', dest, destfolder)
+    return del(['*.log', dest, destfolder]);
+});
+// базавое функция должна быть определена до того как 
+// вызвана. 
+// 
+
+gulp.task('images', series('clean', async function() {
+    gulp.src(images.in)
+        .pipe(newer(images.out))
+        .pipe(imagemin([imagemin.mozjpeg({ quality: 15, progressive: true })]))
+        .pipe(gulp.dest(images.out));
+}));
+
+gulp.task('styles', async function() {
+    // Code Goes Here
+    console.log('cтарт сo styles места');
+});
+
+gulp.task('concat', async function() {
+    //склейка 
+    //сначала определяем что склеивать через запятую.
+    gulp.src(["app/js/js_test.js"])
+        .pipe(concat('app.js'))
+        .pipe(gulp.dest(dest));
+});
+
+gulp.task('minfi', async function() {
+    //склейка 
+    //сначала определяем что склеивать через запятую.
+    gulp.src([dest + "app.js"])
+        .pipe(rename('app.min.js'))
+        .pipe(babel({
+            presets: ['@babel/env']
+        }))
+        .pipe(uglify())
+        // .pipe(concat('main.min.js'))
+        .pipe(gulp.dest(dest));
+});
+
+
+// https://medium.com/@delawere2008/%D1%81%D0%B1%D0%BE%D1%80%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B0-%D0%BD%D0%B0-gulp-%D0%B2-2020-5c40dae24e00
+
+
+function clean(done) {
+    // [Omitted] Do stuff ...
+
+    del(['error.log', dest]);
+    gulp.src(images.in)
+        .pipe(newer(images.out))
+        .pipe(imagemin([imagemin.mozjpeg({ quality: 85, progressive: true })]))
+        .pipe(gulp.dest(images.out));
+    done();
+}
+
+gulp.task('test', function(){
+ watcher.on('change', function(path, stats) {
+                console.log(`File ${path} was changed`);
+            });
+ });
+
+gulp.watch('app/img/*.jpg',{dalay: 500}, gulp.parallel('images'));
+
+
+gulp.task(
+    'default', series('clean', 
+         function() {
+            console.log('cтарт с default места');
+             watcher.on('change', function(path, stats) {
+                console.log(`File ${path} was changed`);
+            });
+        }),
+);
+
+// gulp.watch('app/img/*.jpg', gulp.parallel('images'));
+//gulp.watch('app/css/*.css', gulp.parallel('styles'));
+//gulp.watch('index.html', gulp.parallel('clean'));
+
+//exports.defaultTask = series(clean);
+
